@@ -1,6 +1,6 @@
 import discord
 import os
-from discord.ext import commands
+from discord.ext import commands, pages
 from discord.commands import Option
 import requests
 from requests.auth import HTTPBasicAuth
