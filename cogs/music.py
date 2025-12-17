@@ -23,10 +23,16 @@ class music(commands.Cog):
         session = requests.Session()
         # Login
         payload = {"email": os.getenv("EMAIL"), "password": os.getenv("PASSWORD")}
-        loginResponse = session.post(endpoint+"/auth/login",json=payload)
-
+        try:
+            loginResponse = session.post(endpoint+"/auth/login",json=payload)
+        except Exception as e:
+            await ctx.respond(f"Connection Failed: {e}")
+            return 
+        
         if loginResponse.status_code != 200:
+            await ctx.respond("Login Failed: Error " + loginResponse.status_code)
             return
+
         
 
 
