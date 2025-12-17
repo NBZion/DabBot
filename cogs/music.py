@@ -3,7 +3,7 @@ import os
 from discord.ext import commands, pages
 from discord.commands import Option
 import requests
-from requests.auth import HTTPBasicAuth
+import json
 import dotenv
 
 
@@ -17,7 +17,7 @@ class music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.slash_command(guild_ids=whitelistedServers, description="Searches DAB Servers For The Song You Want")
+    @commands.slash_command(guild_ids={whitelistedServers}, description="Searches DAB Servers For The Song You Want")
     async def search_song(self, ctx, songname: str):
         # Initialize Session
         session = requests.Session()
@@ -39,7 +39,21 @@ class music(commands.Cog):
         # Search File
         searchResponse = session.get(endpoint + f"/search?q={songname}&offset=0&type=track")
         if searchResponse.status_code == 200:
-            await ctx.respond(searchResponse.content)
+            tracks = json.loads(searchResponse.content)['tracks']
+            trackPages = []
+
+            
+            for track in tracks:
+                trackEmbed = discord.Embed(
+                    title=track["artist"] +  " - "  + track["title"],
+                )
+                trackEmbed.add_field(name="Album", value=track["albumTitle"])
+                trackEmbed.add_field(name="ID", value=track["id"])
+                trackEmbed.set_image(url=track["albumCover"])
+                
+                await ctx.respond(embed=trackEmbed)
+                print(track["artist"] + " - " + track["title"])
+                print(track["albumTitle"])
         else:
             await ctx.respond(searchResponse.status_code)
         
