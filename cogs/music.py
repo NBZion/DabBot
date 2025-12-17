@@ -1,6 +1,7 @@
 import discord
 import os
-from discord.ext import commands, pages
+from discord.ext import commands
+from discord.ext.pages import Paginator, Page 
 from discord.commands import Option
 import requests
 import json
@@ -51,9 +52,16 @@ class music(commands.Cog):
                 trackEmbed.add_field(name="ID", value=track["id"])
                 trackEmbed.set_image(url=track["albumCover"])
                 
-                await ctx.respond(embed=trackEmbed)
-                print(track["artist"] + " - " + track["title"])
-                print(track["albumTitle"])
+                trackPages.append(Page(
+                    embeds=[trackEmbed]
+                ))
+
+                
+                #print(track["artist"] + " - " + track["title"])
+                #print(track["albumTitle"])
+        
+            paginator = Paginator(trackPages)
+            await paginator.respond(ctx.interaction, ephemeral=False)
         else:
             await ctx.respond(searchResponse.status_code)
         
