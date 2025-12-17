@@ -10,7 +10,7 @@ intents=discord.Intents.default()
 intents.message_content = True
 intents.guilds = True
 intents.members = True
-bot = commands.Bot(command_prefix="nb!",intents=intents)
+bot = commands.Bot(command_prefix="dab!",intents=intents)
 
 @bot.event
 async def on_ready():
