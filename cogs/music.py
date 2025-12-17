@@ -11,7 +11,7 @@ dotenv.load_dotenv()
 
 ## Temp Variable for Whitelisted Servers
 endpoint = "https://dab.yeet.su/api"
-whitelistedServers = ["1053879369011044444"]
+whitelistedServers = os.getenv("WHITELISTED_SERVER")
 
 class music(commands.Cog):
     def __init__(self, bot):
