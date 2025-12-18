@@ -30,7 +30,6 @@ class DabSessionHandler():
                 print("Failed To Login - Error " + str(loginResponse.status_code))
                 return loginResponse.status_code
             else:
-                print("Succesful Login")
                 self.logged = True
                 return 200
         else: 
