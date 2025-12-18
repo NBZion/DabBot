@@ -10,60 +10,85 @@ import dotenv
 
 dotenv.load_dotenv()
 
-## Temp Variable for Whitelisted Servers
 endpoint = "https://dab.yeet.su/api"
+
+class DabSessionHandler():
+    def __init__(self):
+        self.session = requests.Session()
+        self.logged = False
+
+
+    def login(self, email, password):
+        loginResponse = None
+        if self.logged == False:
+            try:
+                loginResponse = self.session.post(endpoint+"/auth/login",json={"email": email, "password":password})
+            except Exception as e:
+                return "An Error Has Occured: {e}"
+            
+            if loginResponse.status_code != 200:
+                print("Failed To Login - Error " + str(loginResponse.status_code))
+                return loginResponse.status_code
+            else:
+                print("Succesful Login")
+                self.logged = True
+                return 200
+        else: 
+            print("Already Logged In!")
+            return
+        
+    
+    def search(self, name: str, album: bool):
+        searchResponse = None
+        
+        if album:
+            # Album
+            searchResponse = self.session.get(endpoint + f"/search?q={name}&offset=0&type=album")
+        else:
+            # Regular Song/Track
+            searchResponse = self.session.get(endpoint + f"/search?q={name}&offset=0&type=track")
+        
+        if searchResponse.status_code == 200:
+            if album:   return json.loads(searchResponse.content)['albums'] 
+            else:   return json.loads(searchResponse.content)['tracks']
+        else:
+            return searchResponse.status_code
+        
+
+
+## Temp Variable for Whitelisted Servers
+
 whitelistedServers = os.getenv("WHITELISTED_SERVER")
 
 class music(commands.Cog):
     def __init__(self, bot):
-        self.bot = bot
+        self.bot = bot      
+        self.session_handler = DabSessionHandler()
 
     @commands.slash_command(guild_ids={whitelistedServers}, description="Searches DAB Servers For The Song You Want")
     async def search_song(self, ctx, songname: str):
-        # Initialize Session
-        session = requests.Session()
+       
         # Login
-        payload = {"email": os.getenv("EMAIL"), "password": os.getenv("PASSWORD")}
-        try:
-            loginResponse = session.post(endpoint+"/auth/login",json=payload)
-        except Exception as e:
-            await ctx.respond(f"Connection Failed: {e}")
-            return 
+        self.session_handler.login(os.getenv("EMAIL"), os.getenv("PASSWORD"))
+       
+        tracks = self.session_handler.search(songname, False)
+        trackPages = []
         
-        if loginResponse.status_code != 200:
-            await ctx.respond("Login Failed: Error " + loginResponse.status_code)
-            return
-
-        
-
-
-        # Search File
-        searchResponse = session.get(endpoint + f"/search?q={songname}&offset=0&type=track")
-        if searchResponse.status_code == 200:
-            tracks = json.loads(searchResponse.content)['tracks']
-            trackPages = []
-
+        for track in tracks:
+            trackEmbed = discord.Embed(
+                title=track["artist"] +  " - "  + track["title"],
+            )
+            trackEmbed.add_field(name="Album", value=track["albumTitle"])
+            trackEmbed.add_field(name="ID", value=track["id"])
+            trackEmbed.set_image(url=track["albumCover"])
             
-            for track in tracks:
-                trackEmbed = discord.Embed(
-                    title=track["artist"] +  " - "  + track["title"],
-                )
-                trackEmbed.add_field(name="Album", value=track["albumTitle"])
-                trackEmbed.add_field(name="ID", value=track["id"])
-                trackEmbed.set_image(url=track["albumCover"])
-                
-                trackPages.append(Page(
-                    embeds=[trackEmbed]
-                ))
-
-                
-                #print(track["artist"] + " - " + track["title"])
-                #print(track["albumTitle"])
-        
-            paginator = Paginator(trackPages)
-            await paginator.respond(ctx.interaction, ephemeral=False)
-        else:
-            await ctx.respond(searchResponse.status_code)
+            trackPages.append(Page(
+                embeds=[trackEmbed]
+            ))
+    
+        paginator = Paginator(trackPages)
+        await paginator.respond(ctx.interaction, ephemeral=False)
+       
         
 
 
