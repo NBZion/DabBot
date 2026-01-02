@@ -11,6 +11,7 @@ import dotenv
 dotenv.load_dotenv()
 
 endpoint = "https://dab.yeet.su/api"
+fileHostEndpoint = "https://0x0.st"
 
 class DabSessionHandler():
     def __init__(self):
@@ -53,6 +54,14 @@ class DabSessionHandler():
         else:
             return searchResponse.status_code
         
+    def getStreamLink(self, id: str):
+        streamResponse = self.session.get(endpoint + f"/stream?trackId={id}")
+
+        if streamResponse.status_code == 200:
+            return json.loads(streamResponse.content)['url']
+        else:
+            return f"Error: {streamResponse.status_code}"
+        
 
 
 ## Temp Variable for Whitelisted Servers
@@ -63,12 +72,14 @@ class music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot      
         self.session_handler = DabSessionHandler()
+        self.logged = False
 
     @commands.slash_command(guild_ids={whitelistedServers}, description="Searches DAB Servers For The Song You Want")
     async def search_song(self, ctx, songname: str):
        
         # Login
-        self.session_handler.login(os.getenv("EMAIL"), os.getenv("PASSWORD"))
+        if self.logged == False:
+            self.session_handler.login(os.getenv("EMAIL"), os.getenv("PASSWORD"))
        
         tracks = self.session_handler.search(songname, False)
         trackPages = []
@@ -87,6 +98,33 @@ class music(commands.Cog):
     
         paginator = Paginator(trackPages)
         await paginator.respond(ctx.interaction, ephemeral=False)
+    
+    @commands.slash_command(guild_ids={whitelistedServers}, description="Provides a Download Link to A Song")
+    async def download_song(self, ctx, id: str):
+        # Login
+        if self.logged == False:
+            self.session_handler.login(os.getenv("EMAIL"), os.getenv("PASSWORD"))
+
+        streamLink = self.session_handler.getStreamLink(id)
+
+        if "Error" in streamLink:
+            print(streamLink)
+            await ctx.respond(streamLink)
+            return
+
+        await ctx.respond(f"[Here]({streamLink}) is your requested song!")
+
+        # Due to the Nature of The Project, Put Here to Test an API :)
+        #fileUrl = requests.post(fileHostEndpoint, data={'url':streamLink, 'expires':1},headers={"User-Agent": "DabBot/1.0" })
+        #print(fileUrl.content)
+        
+
+
+        
+
+
+
+
        
         
 
