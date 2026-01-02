@@ -80,6 +80,7 @@ class music(commands.Cog):
         # Login
         if self.logged == False:
             self.session_handler.login(os.getenv("EMAIL"), os.getenv("PASSWORD"))
+            self.logged = True
        
         tracks = self.session_handler.search(songname, False)
         trackPages = []
@@ -104,6 +105,7 @@ class music(commands.Cog):
         # Login
         if self.logged == False:
             self.session_handler.login(os.getenv("EMAIL"), os.getenv("PASSWORD"))
+            self.logged = True
 
         streamLink = self.session_handler.getStreamLink(id)
 
