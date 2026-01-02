@@ -11,7 +11,7 @@ import dotenv
 dotenv.load_dotenv()
 
 endpoint = "https://dab.yeet.su/api"
-fileHostEndpoint = "https://0x0.st"
+# fileHostEndpoint = "https://0x0.st"
 
 class DabSessionHandler():
     def __init__(self):
